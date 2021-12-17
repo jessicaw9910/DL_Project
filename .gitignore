@@ -1,0 +1,7 @@
+.ipynb_checkpoints
+__pycache__
+/data/250k_rndm_zinc_drugs_clean.smi
+/data/dataset_v1.csv
+/data/moses.tab
+/data/zinc.csv
+/weights
