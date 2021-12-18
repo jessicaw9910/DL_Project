@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 # referred to this implementation for guidance on a complete train() function
 # https://inside-machinelearning.com/en/the-ideal-pytorch-function-to-train-your-model-easily/
-def train(model, optimizer, scheduler, dl_train, dl_val, path, device, epochs=100):
+def train(model, optimizer, dl_train, dl_val, path, device, epochs=100, sched=None):
     import time
     
     print('train() called: model=%s, opt=%s(lr=%f), epochs=%d, device=%s\n' % \
@@ -115,7 +115,8 @@ def train(model, optimizer, scheduler, dl_train, dl_val, path, device, epochs=10
         history['acc_train'].append(train_acc)
         history['acc_val'].append(val_acc)
 
-        scheduler.step(val_loss)
+        if sched is not None:
+            sched.step(val_loss)
         
     # outside of epoch loop
     end_time = time.time()

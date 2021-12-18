@@ -325,36 +325,36 @@ def create_data(X_train, X_test, colname='SMILES'):
 
     return char2idx, idx2char, train_idx, test_idx
 
-def main_utils(args):
-    df = import_data(args.input, args.path)
-    # previously pre-processed version on path ('data/zinc.csv')
-    # df['SELFIES'] = df['SMILES'].apply(convert_smiles2selfies)
+# def main_utils(args):
+#     df = import_data(args.input, args.path)
+#     # previously pre-processed version on path ('data/zinc.csv')
+#     # df['SELFIES'] = df['SMILES'].apply(convert_smiles2selfies)
 
-    X_train, X_test = return_splits(df, args.train, args.val, args.cols, args.colc)
-    char2idx, idx2char, train_idx, test_idx = create_data(X_train, X_test, colname=args.colc)
-    train_oh, test_oh = check_conversions(idx2char, train_idx, X_train, test_idx, X_test)
+#     X_train, X_test = return_splits(df, args.train, args.val, args.cols, args.colc)
+#     char2idx, idx2char, train_idx, test_idx = create_data(X_train, X_test, colname=args.colc)
+#     train_oh, test_oh = check_conversions(idx2char, train_idx, X_train, test_idx, X_test)
 
-    if args.output:
-        return X_train, X_test, char2idx, idx2char, train_idx, test_idx, train_oh, test_oh
+#     if args.output:
+#         return X_train, X_test, char2idx, idx2char, train_idx, test_idx, train_oh, test_oh
 
-def parsearg_utils():
-    import argparse
+# def parsearg_utils():
+#     import argparse
 
-    parser = argparse.ArgumentParser(description='Download and pre-process SMILE strings.')
+#     parser = argparse.ArgumentParser(description='Download and pre-process SMILE strings.')
 
-    parser.add_argument('-i','--input', help='URL or path where csv of SMILE string data can be found (str)', default='https://media.githubusercontent.com/media/molecularsets/moses/master/data/dataset_v1.csv', type=str)
-    parser.add_argument('-t','--train', help='Number of training samples (int)', default=1000, type=int)
-    parser.add_argument('-v','--val', help='Number of testing/validation samples (int)', default=100, type=int)
-    parser.add_argument('-p','--path', help='Path to save data as file including name.csv (str)', default=None, type=str)
-    parser.add_argument('-o','--output', help='If True returns processed data (bool)', default=False, type=bool)
-    parser.add_argument('-s','--cols', help='Name of column with split allocations (str)', default='SPLIT', type=str)
-    ## set to 'SELFIES' to train on SELFIES strings instead
-    parser.add_argument('-c','--colc', help='Name of column with chemical entitites (str)', default='SMILES', type=str)
+#     parser.add_argument('-i','--input', help='URL or path where csv of SMILE string data can be found (str)', default='https://media.githubusercontent.com/media/molecularsets/moses/master/data/dataset_v1.csv', type=str)
+#     parser.add_argument('-t','--train', help='Number of training samples (int)', default=1000, type=int)
+#     parser.add_argument('-v','--val', help='Number of testing/validation samples (int)', default=100, type=int)
+#     parser.add_argument('-p','--path', help='Path to save data as file including name.csv (str)', default=None, type=str)
+#     parser.add_argument('-o','--output', help='If True returns processed data (bool)', default=False, type=bool)
+#     parser.add_argument('-s','--cols', help='Name of column with split allocations (str)', default='SPLIT', type=str)
+#     ## set to 'SELFIES' to train on SELFIES strings instead
+#     parser.add_argument('-c','--colc', help='Name of column with chemical entitites (str)', default='SMILES', type=str)
 
-    args = parser.parse_args()
+#     args = parser.parse_args()
 
-    return args
+#     return args
 
-if __name__ == '__main__':
-    arguments = parsearg_utils()
-    main_utils(arguments)
+# if __name__ == '__main__':
+#     arguments = parsearg_utils()
+#     main_utils(arguments)

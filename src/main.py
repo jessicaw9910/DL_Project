@@ -1,67 +1,90 @@
 #!/usr/bin/env python3
 
-# import numpy as np
+import numpy as np
+import torch
+import pickle as pkl
+
 from utils import *
+from model import ConvEncoder, GRUDecoder, ChemVAE
+from trainer import train
 
 def main(args):
     df = import_data(args.input, args.path)
-    # previously pre-processed version on path ('data/zinc.csv')
+    # previously pre-processed version on path ('data/zinc.csv') with below command
     # df['SELFIES'] = df['SMILES'].apply(convert_smiles2selfies)
+
+    # GitHub data directory contains only tar.gz version
+    # import pandas as pd
+    # df = pd.read_csv('../data/zinc.tar.gz', compression='gzip', header=0, sep=',', error_bad_lines=False)
+    # df.columns[0] = 'SMILES'
+
     X_train, X_test = return_splits(df, args.train, args.val, args.cols, args.colc)
+    char2idx, idx2char, train_idx, test_idx = create_data(X_train, X_test, colname=args.colc)
+    train_oh, test_oh = check_conversions(idx2char, train_idx, X_train, test_idx, X_test)
 
-    if args.colc == 'SMILES':
-        char2idx, idx2char = create_vocab(X_train)
-        train_idx = [convert_str2num(i, char2idx) for i in X_train]
-        test_idx = [convert_str2num(i, char2idx) for i in X_test]
-    else:
-        # SELFIE string needs to be pre-proccessed into tokens
-        train_token = tokenize_selfie(X_train)
-        test_token = tokenize_selfie(X_test)
-        char2idx, idx2char = create_vocab(train_token)
-        train_idx = [convert_str2num(i, char2idx) for i in train_token]
-        test_idx = [convert_str2num(i, char2idx) for i in test_token]
+    path = args.model + args.colc + '/'
 
-    X_train = [tokenize_selfie(i) for i in X_train if args.colc == 'SELFIES']
-    X_test = [tokenize_selfie(i) for i in X_test if args.colc == 'SELFIES']
-    char2idx, idx2char = create_vocab(X_train)
-    train_idx = [convert_str2num(i, char2idx) for i in X_train]
-    test_idx = [convert_str2num(i, char2idx) for i in X_test]
+    n_length = train_oh.shape[1]
+    n_char = train_oh.shape[2]
 
-    train_char = [convert_num2str(i, idx2char) for i in train_idx]
-    print("There are %d training index conversion errors" % (sum([train_char[i] != char for i, char in enumerate(X_train)])))
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    test_char = [convert_num2str(i, idx2char) for i in test_idx]
-    print("There are %d testing index conversion errors" % (sum([test_char[i] != char for i, char in enumerate(X_test)])))
+    enc = ConvEncoder(args.latent, n_length, n_char).to(device)
+    dec = GRUDecoder(args.latent, n_length, n_char).to(device)
+    model = ChemVAE(enc, dec).to(device)
 
-    print("")
+    optimizer = torch.optim.Adam(model.parameters(), lr = args.lr)
+    if args.dynlr:
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor = 0.8, patience = 3, min_lr = 0.0001)
 
-    train_oh = convert_num2onehot(train_idx)
-    test_oh = convert_num2onehot(test_idx)
+    X_train = torch.from_numpy(train_oh.astype(np.float32))
+    X_test = torch.from_numpy(test_oh.astype(np.float32))
 
-    train_oh_idx = convert_onehot2num(train_oh)
-    print("There are %d training one-hot conversion errors" % (sum([train_oh_idx[i] != char for i, char in enumerate(train_idx)])))
+    torch.manual_seed(args.seed)
 
-    test_oh_idx = convert_onehot2num(test_oh)
-    print("There are %d testing one-hot conversion errors" % (sum([test_oh_idx[i] != char for i, char in enumerate(test_idx)])))
+    train_loader = torch.utils.data.DataLoader(X_train, batch_size=args.batch, shuffle=True, num_workers=6, drop_last = True)
+    test_loader = torch.utils.data.DataLoader(X_test, batch_size=args.batch, shuffle=True, num_workers=6, drop_last = True)
+
+    history = train(model, optimizer, train_loader, test_loader, path, device, epochs=args.epochs, sched=scheduler)
 
     if args.output:
-        return X_train, X_test, char2idx, idx2char, train_idx, test_idx, train_oh, test_oh
+        # save char2idx dictionary as pkl
+        filename = args.colc + '_char2idx_dict'
+        outfile = open(filename, 'wb')
+        pkl.dump(char2idx, outfile)
+        outfile.close()
 
-def parse_arguments():
+        # save history dictionary as pkl
+        filename = args.colc + '_history_dict'
+        outfile = open(filename, 'wb')
+        pkl.dump(history, outfile)
+        outfile.close()
+
+def parsearg_utils():
     import argparse
 
-    parser = argparse.ArgumentParser(description='Run Chemical VAE.')
+    parser = argparse.ArgumentParser(description='Download and pre-process SMILE strings.')
 
     parser.add_argument('-i','--input', help='URL or path where csv of SMILE string data can be found (str)', default='https://media.githubusercontent.com/media/molecularsets/moses/master/data/dataset_v1.csv', type=str)
     parser.add_argument('-t','--train', help='Number of training samples (int)', default=1000, type=int)
     parser.add_argument('-v','--val', help='Number of testing/validation samples (int)', default=100, type=int)
     parser.add_argument('-p','--path', help='Path to save data as file including name.csv (str)', default=None, type=str)
-    parser.add_argument('-o','--output', help='If True returns processed data (bool)', default=False, type=bool)
+    parser.add_argument('-o','--output', help='If True returns processed data (bool)', default=True, type=bool)
+    parser.add_argument('-s','--cols', help='Name of column with split allocations (str)', default='SPLIT', type=str)
+    ## set to 'SELFIES' to train on SELFIES strings instead
+    parser.add_argument('-c','--colc', help='Name of column with chemical entitites (str)', default='SMILES', type=str)
+    parser.add_argument('-l','--lr', help='Learning rate (float)', default=0.001, type=float)
+    parser.add_argument('-d','--dynlr', help='Indicates if dynamic learning rate scheduler in use (bool)', default=True, type=bool)
+    parser.add_argument('-b','--batch', help='Batch size (int)', default=200, type=int)
+    parser.add_argument('-z','--latent', help='Latent dimension (int)', default=488, type=int)
+    parser.add_argument('-n','--seed', help='Seed (int)', default=123, type=int)
+    parser.add_argument('-m','--model', help='Path to store model (str)', default='../weights/', type=str)
+    parser.add_argument('-e','--epochs', help='Epochs (int)', default=100, type=int)    
 
     args = parser.parse_args()
 
     return args
 
 if __name__ == '__main__':
-    arguments = parse_arguments()
-    main_utils(arguments)
+    arguments = parsearg_utils()
+    main(arguments)

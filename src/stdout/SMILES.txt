@@ -1,0 +1,21 @@
+There are 0 training index conversion errors
+There are 0 testing index conversion errors
+
+There are 0 training one-hot conversion errors
+There are 0 testing one-hot conversion errors
+train() called: model=ChemVAE, opt=Adam(lr=0.001000), epochs=100, device=cuda:0
+
+Epoch   1/100, train loss: 123.29, train acc:  0.56, val loss: 114.61, val acc:  0.58
+Epoch  10/100, train loss: 78.62, train acc:  0.71, val loss: 78.95, val acc:  0.71
+Epoch  20/100, train loss: 61.45, train acc:  0.78, val loss: 59.22, val acc:  0.78
+Epoch  30/100, train loss: 51.21, train acc:  0.82, val loss: 47.71, val acc:  0.83
+Epoch  40/100, train loss: 45.16, train acc:  0.84, val loss: 64.51, val acc:  0.77
+Epoch  50/100, train loss: 37.87, train acc:  0.87, val loss: 36.20, val acc:  0.88
+Epoch  60/100, train loss: 31.67, train acc:  0.89, val loss: 31.77, val acc:  0.89
+Epoch  70/100, train loss: 31.05, train acc:  0.89, val loss: 31.97, val acc:  0.89
+Epoch  80/100, train loss: 37.38, train acc:  0.88, val loss: 85.86, val acc:  0.70
+Epoch  90/100, train loss: 33.98, train acc:  0.88, val loss: 35.55, val acc:  0.88
+Epoch 100/100, train loss: 26.21, train acc:  0.91, val loss: 30.12, val acc:  0.90
+
+Time total:     20312.47 sec
+Time per epoch: 203.12 sec
