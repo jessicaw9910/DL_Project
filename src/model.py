@@ -5,50 +5,67 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-def calc_kld(z_mean, z_logvar):
-    '''
-    Calculate KL divergence
+class ConvEncoder(nn.Module):
+    def __init__(self, d_latent, d_length, d_char):
+        super(ConvEncoder, self).__init__()
+        self.d_latent = d_latent
+        self.d_length = d_length
+        self.d_char = d_char
+        
+        self.conv1 = nn.Conv1d(self.d_length, 9, kernel_size=9)
+        self.conv2 = nn.Conv1d(9, 9, kernel_size=9)
+        self.conv3 = nn.Conv1d(9, 10, kernel_size=11)
+        
+        ## kernel size = 9 + 9 + 11 - 3 = 26
+        ## per Gómez-Bombarelli Zinc FC layer dim 196
+        self.fc1 = nn.Linear(10 * (self.d_char - 26), 196)
+        self.fc_mu = nn.Linear(196, self.d_latent)
+        self.fc_logvar = nn.Linear(196, self.d_latent)
 
-    Args:
-        z_mean (float): latent mean from encoder
-        z_logvar (float): latent logvar from encoder
-    
-    Returns:
-        kld (float): list of SMILE strings for training
-    '''
+        self.relu = nn.ReLU()
+        
+    def forward(self, x):
+        batch_size = x.shape[0]
+        x = self.relu(self.conv1(x))
+        x = self.relu(self.conv2(x))
+        x = self.relu(self.conv3(x))
+        x = x.view(batch_size, -1)
+        x = F.selu(self.fc1(x))
+        z_mu = self.fc_mu(x)
+        z_logvar = self.fc_logvar(x)
+        
+        return z_mu, z_logvar
 
-    kld = -0.5 * torch.mean(1 + z_logvar - z_mean**2 - z_logvar.exp())
-
-    return kld 
-
-class ChemVAE(nn.Module):
-    def __init__(self):
-        super(ChemVAE, self).__init__()
-
-        self.conv_1 = nn.Conv1d(train_oh.shape[1], 9, kernel_size=9)
-        self.conv_2 = nn.Conv1d(9, 9, kernel_size=9)
-        self.conv_3 = nn.Conv1d(9, 10, kernel_size=11)
-        self.linear_1 = nn.Linear(30, 435)
-        self.linear_2 = nn.Linear(435, 292)
-        self.linear_3 = nn.Linear(435, 292)
-
-        self.linear_4 = nn.Linear(292, 292)
-        self.gru = nn.GRU(292, 501, 3, batch_first=True)
-        self.linear_5 = nn.Linear(501, train_oh.shape[2])
+class GRUDecoder(nn.Module):
+    def __init__(self, d_latent, d_length, d_char):
+        super(GRUDecoder, self).__init__()
+        self.d_latent = d_latent
+        self.d_length = d_length
+        self.d_char = d_char
+        
+        self.fc1 = nn.Linear(self.d_latent, self.d_latent)
+        self.gru = nn.GRU(self.d_latent, 501, 3, batch_first=True)
+        self.fc2 = nn.Linear(501, self.d_char)
         
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax()
 
-    def encode(self, x):
-        x = self.relu(self.conv_1(x))
-        x = self.relu(self.conv_2(x))
-        x = self.relu(self.conv_3(x))
-        x = x.view(x.size(0), -1)
-        x = F.selu(self.linear_1(x))
-        z_mu = self.linear_2(x)
-        z_logvar = self.linear_3(x)
-        return z_mu, z_logvar
+    def forward(self, z):
+        z = F.selu(self.fc1(z))
+        z = z.view(z.size(0), 1, z.size(-1)).repeat(1, self.d_length, 1)
+        output, hn = self.gru(z)
+        out_reshape = output.contiguous().view(-1, output.size(-1))
+        y0 = F.softmax(self.fc2(out_reshape), dim=1)
+        y = y0.contiguous().view(output.size(0), -1, y0.size(-1))
+        return y
 
+class ChemVAE(nn.Module):
+    def __init__(self, encoder, decoder):
+        super(ChemVAE, self).__init__()
+        
+        self.encode = encoder
+        self.decode = decoder
+        
     def sampling(self, mu, log_var):
         '''
         Sample from latent space, z ~ N(μ, σ**2)
@@ -63,15 +80,6 @@ class ChemVAE(nn.Module):
 
         # use the reparameterization trick
         return mu + sigma * epsilon
-
-    def decode(self, z):
-        z = F.selu(self.linear_4(z))
-        z = z.view(z.size(0), 1, z.size(-1)).repeat(1, 60, 1)
-        output, hn = self.gru(z)
-        out_reshape = output.contiguous().view(-1, output.size(-1))
-        y0 = F.softmax(self.linear_5(out_reshape), dim=1)
-        y = y0.contiguous().view(output.size(0), -1, y0.size(-1))
-        return y
 
     def forward(self, x):
         z_mean, z_logvar = self.encode(x)
