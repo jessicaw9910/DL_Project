@@ -49,13 +49,13 @@ def main(args):
 
     if args.output:
         # save char2idx dictionary as pkl
-        filename = args.colc + '_char2idx_dict'
+        filename = args.colc + '_char2idx_dict.pkl'
         outfile = open(filename, 'wb')
         pkl.dump(char2idx, outfile)
         outfile.close()
 
         # save history dictionary as pkl
-        filename = args.colc + '_history_dict'
+        filename = args.colc + '_history_dict.pkl'
         outfile = open(filename, 'wb')
         pkl.dump(history, outfile)
         outfile.close()

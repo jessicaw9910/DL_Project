@@ -3,6 +3,7 @@ There are 0 testing index conversion errors
 
 There are 0 training one-hot conversion errors
 There are 0 testing one-hot conversion errors
+
 train() called: model=ChemVAE, opt=Adam(lr=0.001000), epochs=100, device=cuda:0
 
 Epoch   1/100, train loss: 123.29, train acc:  0.56, val loss: 114.61, val acc:  0.58

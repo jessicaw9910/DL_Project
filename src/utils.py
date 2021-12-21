@@ -207,11 +207,15 @@ def convert_num2str(number, dictionary, start=True, end=True, padding=True):
     
     if start:
         try:
+            #TODO
+            # clip string before and including <beg>
             output = list(filter(('<beg>').__ne__, output))
         except:
             pass
     if end:
         try:
+            #TODO
+            # clip string after and including <end>
             output = list(filter(('<end>').__ne__, output))
         except:
             pass
@@ -308,6 +312,8 @@ def check_conversions(dictionary, train_num, train, test_num, test):
     test_oh_idx = convert_onehot2num(test_oh)
     print("There are %d testing one-hot conversion errors" % (sum([test_oh_idx[i] != char for i, char in enumerate(test_num)])))
     
+    print("")
+
     return train_oh, test_oh
 
 def create_data(X_train, X_test, colname='SMILES'):
