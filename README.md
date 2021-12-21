@@ -1,12 +1,12 @@
 # Chemical VAE
 
-I have implemented the variational autoencoder (VAE) described in the paper entitled ["Automatic Chemical Design Using a Data-Driven Continuous Representation of Molecules."][1](https://pubs.acs.org/doi/10.1021/acscentsci.7b00572) I have compared performance using either SELFIE or SMILE strings as inputs.
+I have implemented the variational autoencoder (VAE) described in the paper entitled "Automatic Chemical Design Using a Data-Driven Continuous Representation of Molecules."<sup>[1](https://pubs.acs.org/doi/10.1021/acscentsci.7b00572)<sup> I have compared performance using either SELFIE or SMILE strings as inputs.<sup>[2](https://arxiv.org/abs/1905.13741)<sup>
 
 ## References
 
 [1] [R. Gómez-Bombarelli et al., Automatic Chemical Design Using a Data-Driven Continuous Representation of Molecules. ACS Central Science 4, 268-276 (2018).](https://pubs.acs.org/doi/10.1021/acscentsci.7b00572)
 
-[M. Krenn, F. Häse, A. Nigam, P. Friederich, A. Aspuru-Guzik, Self-referencing embedded strings (SELFIES): A 100% robust molecular string representation. Machine Learning: Science and Technology 1, 045024 (2020).](https://arxiv.org/abs/1905.13741)
+[2] [M. Krenn, F. Häse, A. Nigam, P. Friederich, A. Aspuru-Guzik, Self-referencing embedded strings (SELFIES): A 100% robust molecular string representation. Machine Learning: Science and Technology 1, 045024 (2020).](https://arxiv.org/abs/1905.13741)
 
 I have referred to the following implementations of VAEs for molecule generation for guidance:
 
