@@ -1,6 +1,6 @@
 # Chemical VAE
 
-I have implemented the variational autoencoder (VAE) described in the paper entitled "Automatic Chemical Design Using a Data-Driven Continuous Representation of Molecules."<sup>[1](https://pubs.acs.org/doi/10.1021/acscentsci.7b00572)<sup> I have compared performance using either SELFIE or SMILE strings as inputs.<sup>[2](https://arxiv.org/abs/1905.13741)<sup>
+I have implemented the variational autoencoder (VAE) described in the paper entitled "Automatic Chemical Design Using a Data-Driven Continuous Representation of Molecules."<sup>[1](https://pubs.acs.org/doi/10.1021/acscentsci.7b00572)</sup> I have compared performance using either SELFIE or SMILE strings as inputs.<sup>[2](https://arxiv.org/abs/1905.13741)</sup>
 
 ## References
 
